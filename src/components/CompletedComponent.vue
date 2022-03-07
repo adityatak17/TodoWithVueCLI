@@ -2,12 +2,12 @@
     <div v-show="completedtaskslist.length">
         <ul>
             <li v-for=" (task,index) in completedtaskslist" :key="index">
-                <p>Title: {{task.title}}</p>
-                <p>Description: {{task.description}}</p>
+                <p>Title: {{task.task_title}}</p>
+                <p>Description: {{task.task_description}}</p>
                 <div class="form-buttons">
-                    <button class="button" @click="moveToTodo(task,index,instanceNumber)">Move to Todo List</button>
-                    <button class="button" @click="moveToOngoing(task,index,instanceNumber)">Move to Ongoing Tasks</button>
-                    <button class="button" @click="moveToDeleted(task,index,instanceNumber)">Delete This Task</button>
+                    <button class="button" @click="moveToTodo(task)">Move to Todo List</button>
+                    <button class="button" @click="moveToOngoing(task)">Move to Ongoing Tasks</button>
+                    <button class="button" @click="moveToDeleted(task)">Delete This Task</button>
                 </div>
                 <br>
             </li>
@@ -26,18 +26,17 @@ export default {
     },
     data(){
         return {
-            instanceNumber:2
         }
     } ,
     methods: {
-        moveToDeleted(task,index,instanceNumber){
-            this.$emit("move-to-deleted",task,index,instanceNumber)
+        moveToDeleted(task){
+            this.$emit("move-to-deleted",task)
         },
-        moveToTodo(task,index,instanceNumber){
-            this.$emit("move-to-todo",task,index,instanceNumber)
+        moveToTodo(task){
+            this.$emit("move-to-todo",task)
         },
-        moveToOngoing(task,index,instanceNumber){
-            this.$emit("move-to-ongoing",task,index,instanceNumber)
+        moveToOngoing(task){
+            this.$emit("move-to-ongoing",task)
         }
     }
 }

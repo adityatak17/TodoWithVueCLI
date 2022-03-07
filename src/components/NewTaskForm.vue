@@ -13,15 +13,15 @@
             <div id="addingButtons">
                     <input type="submit" 
                             id="button0"
-                            @click="buttonid=0"    
+                            @click="status='todolist'"    
                             value="Add to To Do List"><br>
                     <input type="submit"
                             id="button1"
-                            @click="buttonid=1"
+                            @click="status='ongoing'"
                             value="Add to Ongoing Tasks"><br>
                     <input type="submit"
                             id="button2"
-                            @click="buttonid=2"
+                            @click="status='completed'"
                             value="Add to Completed"><br>
             </div>
             <input type="submit"
@@ -33,6 +33,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
     name:'NewTaskForm',
     props:{
@@ -45,35 +46,34 @@ export default {
         return {
             title:'',
             description:'',
+            status:'todolist',
             buttonid:0   
         }
     },
     methods: {
-        newTaskFormSubmit(){
+        async newTaskFormSubmit(){
 
             if (this.buttonid==3) {
                 this.$emit("task-adding-done")
             }
             else { 
-
                 if(this.title=='' || this.description==''){
                     alert("Please Fill Out all the Details")
                     return
                 }
-                
-                let ButtonId=this.buttonid
-
                 let newTaskCreated={
-                    title:this.title,
-                    description:this.description
+                    task_title:this.title,
+                    task_description:this.description,
+                    task_status:this.status         
                 }
-
-                this.$emit('new-task-added',newTaskCreated,ButtonId)
-            
+                await axios.post('http://localhost:8000/tasks/',newTaskCreated)
+                // location.reload() **(To manually reload the page)**
+                this.$emit("new-task-added")
             }
             // To Reset the form data
             this.title=''
             this.description=''
+            this.status='todolist'
             this.buttonid=0
         }
     }

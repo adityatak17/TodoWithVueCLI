@@ -1,56 +1,53 @@
-<template>
-  <!-- <HelloWorld msg="Welcome to Your Vue.js App" /> -->
+<template>  
   <NewTaskButton @new-task-button-clicked="addForm=true" />
-  <NewTaskForm @task-adding-done="addForm=false" @new-task-added="addingNewTask" :addform="addForm" />
+  <NewTaskForm @task-adding-done="addForm=false" @new-task-added="getTasks" :addform="addForm" />
   <table>
-            <tr>
-                <th>Todo Tasks</th>
-                <th>Ongoing Tasks</th>
-                <th>Completed Tasks</th>
-            </tr>
-            <tr>
-                <td>
-                    <!-- To Do List Component -->
-                    <TodoComponent @move-to-ongoing="moveToOngoing" 
-                                    @move-to-completed="moveToCompleted" 
-                                    @move-to-deleted="moveToDeleted" 
-                                    :todotaskslist="TodoTasks">
-                    </TodoComponent>
-                </td>
-                <td>
-                    <!-- Ongoing Task Component -->
-                    <OngoingComponent  @move-to-completed="moveToCompleted"
-                                        @move-to-deleted="moveToDeleted"
-                                        @move-to-todo="moveToTodo"
-                                        :ongoingtaskslist="OngoingTasks">
-                    </OngoingComponent>
-                </td>
-                <td>
-                    <!-- Completed Task Component -->
-                    <CompletedComponent @move-to-deleted="moveToDeleted"
-                                        @move-to-todo="moveToTodo"
-                                        @move-to-ongoing="moveToOngoing"
-                                        :completedtaskslist="CompletedTasks">
-                    </CompletedComponent>
-                </td>
-            </tr>
-        </table>
+      <tr>
+        <th>Todo Tasks</th>
+        <th>Ongoing Tasks</th>
+        <th>Completed Tasks</th>
+      </tr>
+      <tr>
+        <td>
+          <!-- To Do List Component -->
+          <TodoComponent  @move-to-ongoing="moveToOngoing" 
+                          @move-to-completed="moveToCompleted" 
+                          @move-to-deleted="moveToDeleted" 
+                          :todotaskslist="TodoTasks">
+          </TodoComponent>
+        </td>
+        <td>
+          <!-- Ongoing Task Component -->
+          <OngoingComponent   @move-to-completed="moveToCompleted"
+                              @move-to-deleted="moveToDeleted"
+                              @move-to-todo="moveToTodo"
+                              :ongoingtaskslist="OngoingTasks">
+          </OngoingComponent>
+        </td>
+        <td>
+            <!-- Completed Task Component -->
+            <CompletedComponent @move-to-deleted="moveToDeleted"
+                                @move-to-todo="moveToTodo"
+                                @move-to-ongoing="moveToOngoing"
+                                :completedtaskslist="CompletedTasks">
+            </CompletedComponent>
+        </td>
+      </tr>
+    </table>
 
-        <!-- Button to Show Deleted Tasks -->
-        <DeletedTaskButton @deleted-task-button-clicked="deleteForm=!deleteForm" 
+    <!-- Button to Show Deleted Tasks -->
+    <DeletedTaskButton @deleted-task-button-clicked="deleteForm=!deleteForm" 
                              :deleteform="deleteForm">
-        </DeletedTaskButton>
-        <!-- Deleted Task Component -->
-        <DeletedComponent @move-to-todo="moveToTodo"
-                           @move-to-ongoing="moveToOngoing"
-                           @move-to-completed="moveToCompleted" 
-                           :deletedtaskslist="DeletedTasks"
-                           :deleteform="deleteForm">
-        </DeletedComponent>
-        <br>
-        <br>
-        <APIComponent/>
-
+    </DeletedTaskButton>
+    <!-- Deleted Task Component -->
+    <DeletedComponent @move-to-todo="moveToTodo"
+                      @move-to-ongoing="moveToOngoing"
+                      @move-to-completed="moveToCompleted" 
+                      @permanently-delete-task="PermanentDeleteTask"
+                      :deletedtaskslist="DeletedTasks"
+                      :deleteform="deleteForm">
+    </DeletedComponent>
+  
 </template>
 
 <script>
@@ -63,8 +60,7 @@ import CompletedComponent from "./components/CompletedComponent.vue";
 import DeletedTaskButton from "./components/DeletedTaskButton.vue";
 import DeletedComponent from "./components/DeletedComponent.vue";
 
-import APIComponent from './components/APIComponent.vue';
-
+import axios from 'axios';
 
 export default {
   name: "App",
@@ -76,9 +72,8 @@ export default {
     CompletedComponent,
     DeletedTaskButton,
     DeletedComponent,
-    APIComponent
   },
-  data: function () {
+  data(){
     return {
       addForm: false,
       deleteForm: false,
@@ -89,65 +84,54 @@ export default {
     };
   },
   methods: {
-    addingNewTask(newTaskInstance, ButtonId) {
-      if (ButtonId == 0) {
-        this.TodoTasks.push(newTaskInstance);
-      }
-      if (ButtonId == 1) {
-        this.OngoingTasks.push(newTaskInstance);
-      }
-      if (ButtonId == 2) {
-        this.CompletedTasks.push(newTaskInstance);
-      }
+    async moveToOngoing(task) {
+      await axios.patch(`http://localhost:8000/tasks/${task.id}/`,{task_status:'ongoing'});
+      this.getTasks();
     },
-    moveToOngoing(task, index, instanceNumber) {
-      if (instanceNumber == 0) {
-        this.TodoTasks.splice(index, 1);
-      } else if (instanceNumber == 2) {
-        this.CompletedTasks.splice(index, 1);
-      } else {
-        this.DeletedTasks.splice(index, 1);
-      }
+    async moveToCompleted(task) {
+      await axios.patch(`http://localhost:8000/tasks/${task.id}/`,{task_status:'completed'});
+      this.getTasks();
+    },
+    async moveToDeleted(task) {
+      await axios.patch(`http://localhost:8000/tasks/${task.id}/`,{task_status:'deleted'});
+      this.getTasks();
+    },
+    async moveToTodo(task) {
+      await axios.patch(`http://localhost:8000/tasks/${task.id}/`,{task_status:'todolist'});
+      this.getTasks();
+    },
+    async getTasks(){
+      this.TodoTasks=[]
+      this.OngoingTasks=[]
+      this.CompletedTasks=[]
+      this.DeletedTasks=[]
 
-      this.OngoingTasks.push(task);
+      const response = await axios.get(`http://localhost:8000/tasks/`)
+      response.data.forEach(task=>{
+        if(task.task_status=='todolist'){ 
+          this.TodoTasks.push(task)
+        }
+        else if(task.task_status=='ongoing'){   
+          this.OngoingTasks.push(task)
+        }
+        else if(task.task_status=='completed'){ 
+          this.CompletedTasks.push(task)
+        }
+        else{
+          this.DeletedTasks.push(task)
+        }
+      })
     },
-    moveToCompleted(task, index, instanceNumber) {
-      if (instanceNumber == 0) {
-        this.TodoTasks.splice(index, 1);
-      } else if (instanceNumber == 1) {
-        this.OngoingTasks.splice(index, 1);
-      } else {
-        this.DeletedTasks.splice(index, 1);
-      }
-
-      this.CompletedTasks.push(task);
-    },
-    moveToDeleted(task, index, instanceNumber) {
-      if (instanceNumber == 0) {
-        this.TodoTasks.splice(index, 1);
-      } else if (instanceNumber == 1) {
-        this.OngoingTasks.splice(index, 1);
-      } else {
-        this.CompletedTasks.splice(index, 1);
-      }
-
-      this.DeletedTasks.push(task);
-    },
-    moveToTodo(task, index, instanceNumber) {
-      if (instanceNumber == 1) {
-        this.OngoingTasks.splice(index, 1);
-      } else if (instanceNumber == 2) {
-        this.CompletedTasks.splice(index, 1);
-      } else {
-        this.DeletedTasks.splice(index, 1);
-      }
-
-      this.TodoTasks.push(task);
-    },
+    async PermanentDeleteTask(task){
+      await axios.delete(`http://localhost:8000/tasks/${task.id}/`);
+      this.getTasks();
+    }
+  },
+  async created() {
+    this.getTasks()
   },
 };
 </script>
-
 
 <style>
 body{
