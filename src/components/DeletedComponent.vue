@@ -3,8 +3,8 @@
         <h1>Deleted Tasks</h1>
         <ul>
             <li v-for=" (task,index) in deletedtaskslist" :key="index">
-                <p>Title: {{task.title}}</p>
-                <p>Description: {{task.description}}</p>
+                <p>Title: {{task.task_title}}</p>
+                <p>Description: {{task.task_description}}</p>
                 <div class="form-buttons">
                     <button class="button" @click="moveToTodo(task)">Move to Todo List</button>
                     <button class="button" @click="moveToOngoing(task)">Move to Ongoing Tasks</button>
